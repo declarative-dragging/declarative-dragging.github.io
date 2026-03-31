@@ -1,0 +1,5 @@
+*.md
+*.mdx
+
+/src/demos/nool/peggy
+/src/math/cobyla.js
