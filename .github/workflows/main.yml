@@ -46,13 +46,19 @@ jobs:
         run: npm install
       - name: Build
         run: npm run build
+      - name: Lay out the site
+        # The project page (home/) at the root, and the demo build, the
+        # paper's interactive supplement, at /uist26
+        run: |
+          mkdir site
+          cp -r home/. site/
+          cp -r dist-demo site/uist26
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload demo build output
-          path: "./dist-demo"
+          path: "./site"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

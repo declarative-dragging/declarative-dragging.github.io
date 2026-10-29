@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script>
+    // The supplement used to live here: its old links (#/...) go on to it
+    if (location.hash.startsWith("#/")) location.replace("uist26/" + location.hash);
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-82DWGS1R36"></script>
+  <script>
+    window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date()); gtag('config', 'G-82DWGS1R36');
+  </script>
+
+  <title>Declarative Dragging</title>
+
+  <meta name="description" content="Declarative dragging: an interface author makes an element draggable by specifying which future model states should be accessible by dragging it. Horowitz, Blinn & Heer, UIST 2026 Best Paper." />
+  <meta property="og:title" content="Declarative Dragging" />
+  <meta property="og:description" content="Drag-and-drop makes the digital graspable. Horowitz, Blinn & Heer, UIST 2026 Best Paper." />
+  <meta property="og:image" content="https://declarative-dragging.github.io/how-it-works.webp" />
+
+  <style>
+    @font-face {
+      font-family: "Open Sans";
+      font-display: swap;
+      src: url("fonts/OpenSans-Light.woff2") format("woff2");
+    }
+
+    /* the page's bold: Open Sans Regular, one step up from the Light body text */
+    @font-face {
+      font-family: "Open Sans";
+      font-weight: bold;
+      font-display: swap;
+      src: url("fonts/OpenSans-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Cutive Mono";
+      font-display: swap;
+      src: url("fonts/cutivemono.woff2") format("woff2");
+    }
+
+    :root {
+      --ink: #1d1d1f;
+      --muted: #6b6b70;
+      --rule: #e7e4dc;
+      --paper: #fdfcf8;
+      --card: #ffffff;
+      --accent: #dc3400;
+      /* andrewblinn.com's rainbow hovers, in the page's red here */
+      --link-gradient: var(--accent);
+    }
+
+    @keyframes drift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Open Sans", system-ui, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 3.5rem 1.25rem 5rem;
+    }
+
+    .mono { font-family: "Cutive Mono", "Courier New", monospace; }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 3px;
+    }
+
+    a:hover {
+      color: white;
+      text-decoration: none;
+      background: var(--link-gradient);
+      background-size: 800% 800%;
+      animation: drift 6s linear infinite alternate;
+    }
+
+
+    h1 {
+      font-weight: normal;
+      font-size: clamp(2.4rem, 7vw, 3.6rem);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin: 1.2rem 0 0.6rem;
+    }
+
+    .byline { margin: 0; font-size: 1.05rem; }
+
+    /* Best Paper: white on a plain red block, skewed a little, with small uneven nicks off each corner */
+    .award {
+      position: relative;
+      isolation: isolate;
+      display: inline-block;
+      margin: 1.25rem 0 0;
+      padding: 0.2rem 0.85rem 0.25rem;
+      font-family: "Cutive Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      color: white;
+      transform: rotate(-1.2deg);
+    }
+
+    .award::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--accent);
+      transform: skewX(-6deg);
+      clip-path: polygon(7px 0, calc(100% - 3px) 0, 100% 5px, 100% calc(100% - 8px),
+          calc(100% - 5px) 100%, 3px 100%, 0 calc(100% - 4px), 0 6px);
+    }
+
+    .award a { text-decoration-color: rgba(255, 255, 255, 0.7); }
+    .award a:hover { color: white; background: none; animation: none; text-decoration-color: white; }
+
+    /* Pills with hand-drawn-ish corners: each one a little different. */
+    nav.links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1.85rem 0 2.2rem;
+    }
+
+    nav.links a {
+      font-family: "Cutive Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      text-decoration: none;
+      border: 1px solid var(--ink);
+      padding: 0.25rem 0.85rem;
+      border-radius: 18px 12px 16px 10px / 12px 16px 10px 15px;
+      display: inline-flex;
+      align-items: center;
+      transform-origin: top left;
+      transition: rotate 0.15s ease-out;
+    }
+
+    nav.links a svg { width: 1.05em; height: 1.05em; fill: currentColor; }
+    nav.links a svg.npm { width: 2.4em; height: 0.95em; }
+    nav.links a.icon { border-color: transparent; }
+    /* the draggable version of the row: pulled out by its padding so the pills sit where the static ones did */
+    .pills-draggable { margin: -6px; position: relative; z-index: 5; }
+    /* the pill being dragged keeps its hover look, wherever the pointer is */
+    .pills-draggable a.is-dragged {
+      color: white;
+      border-color: transparent;
+      background: var(--link-gradient);
+      background-size: 800% 800%;
+      animation: drift 6s linear infinite alternate;
+      rotate: 1.5deg;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+    }
+    .pills-draggable svg { display: block; overflow: visible; }
+
+    /* the paper itself is the main link: filled, with a document icon */
+    nav.links a.paper { gap: 0.675em; background: var(--ink); color: white; border-color: var(--ink); }
+    nav.links a.paper:hover { background: var(--link-gradient); background-size: 800% 800%; border-color: transparent; }
+    nav.links a.paper svg.pdf { width: 0.95em; height: 1.2em; fill: none; }
+
+    nav.links a:nth-child(2) { border-radius: 12px 18px 11px 17px / 16px 10px 15px 11px; }
+    nav.links a:nth-child(3) { border-radius: 16px 10px 18px 13px / 11px 15px 12px 17px; }
+    nav.links a:nth-child(4) { border-radius: 10px 17px 13px 18px / 15px 12px 17px 10px; }
+    nav.links a:nth-child(5) { border-radius: 17px 13px 10px 16px / 12px 17px 14px 11px; }
+    nav.links a:nth-child(6) { border-radius: 13px 16px 17px 11px / 17px 11px 12px 16px; }
+
+    nav.links a:hover { border-color: transparent; rotate: 1.5deg; }
+
+    .hook {
+      font-size: clamp(1.5rem, 4.2vw, 1.9rem);
+      line-height: 1.3;
+      margin: 0 0 1rem;
+    }
+
+    .lede { font-size: 1.2rem; line-height: 1.55; }
+    .lede p { margin: 0 0 0.9rem; }
+
+    h2 {
+      font-weight: normal;
+      font-size: 1.5rem;
+      margin: 3.2rem 0 0.6rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--rule);
+    }
+
+    /* the video starts as a still in a thin red frame; clicking swaps in the YouTube player */
+    .video {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      margin: 1.8rem 0 0.4rem;
+      border: 1.5px solid var(--accent);
+      border-radius: 12px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+    .video-poster { position: absolute; inset: 0; display: block; }
+    .video-poster:hover { background: none; }
+    .video-poster img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+
+    .video-poster .play {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 64px;
+      height: 64px;
+      translate: -50% -50%;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      transition: background 0.25s ease, scale 0.25s ease;
+    }
+    .video-poster .play svg { width: 22px; height: 22px; margin-left: 4px; fill: var(--accent); transition: fill 0.25s ease; }
+    .video-poster:hover .play,
+    .video-poster:focus-visible .play { background: var(--accent); scale: 1.08; }
+    .video-poster:hover .play svg,
+    .video-poster:focus-visible .play svg { fill: white; }
+    .video-poster:hover img { transform: scale(1.015); }
+
+    figure { margin: 1.4rem 0; }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      background: var(--card);
+    }
+
+    figcaption, .note {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .bleed {
+      border: 1px solid var(--rule);
+      padding: 0.6rem;
+      background: var(--card);
+      border-radius: 10px;
+    }
+
+    .demos {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.6rem;
+      margin: 1.4rem 0 0.6rem;
+    }
+
+    .demos .card {
+      display: block;
+      min-width: 0;
+      text-decoration: none;
+      transform-origin: top left;
+      transition: rotate 0.15s ease-out;
+    }
+
+    .demos .card:hover { background: none; color: inherit; rotate: 1.5deg; }
+
+    .demos video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--rule);
+      background: white;
+    }
+
+    .demos .card span {
+      display: block;
+      font-family: "Cutive Mono", "Courier New", monospace;
+      margin-top: 0.25rem;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+
+    .demos .card:hover span { color: var(--accent); }
+
+    /* the draggable version of the grid: it spans the grid's columns, pulled out
+       by its padding so the cards sit where the static ones did, and drawn above
+       the text that follows so a dragged card floats over it */
+    .cards-draggable { grid-column: 1 / -1; margin: -10px; position: relative; z-index: 5; }
+    /* one tag for the whole grid (cards.js), above its top right corner */
+    .demos { position: relative; }
+    .demos > .cards-tag {
+      left: auto;
+      right: 0.2rem;
+      top: -1.35rem;
+      bottom: auto;
+      z-index: 6;
+      transform-origin: 100% 50%;
+      transform: translate(0, 6px) rotate(1.8deg) scale(0.85);
+    }
+    .demos:hover > .cards-tag { transform: translate(0, 0) rotate(1.8deg) scale(1); }
+    .cards-draggable svg { display: block; overflow: visible; }
+    .cards-draggable .card.is-dragged { rotate: 1.5deg; }
+    .cards-draggable .card.is-dragged span { color: var(--accent); }
+    .cards-draggable .card.is-dragged video { box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14); }
+
+    /* a live card: its demo running in the picture, picked up (and opened) by its name */
+    .cards-draggable .card.is-live:hover { rotate: none; }
+    .cards-draggable .card.is-live:has(.name:hover),
+    .cards-draggable .card.is-live.is-dragged { rotate: 1.5deg; }
+    .cards-draggable .picture {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 1px solid var(--rule);
+      background: white;
+      overflow: hidden;
+      cursor: default;
+      transition: border-color 0.2s ease;
+    }
+    .cards-draggable .card.is-live:hover .picture { border-color: #d6d2c6; }
+    .cards-draggable .card.is-live.is-dragged .picture { box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14); }
+    .cards-draggable .picture .clip video { border: 0; border-radius: 0; }
+    .cards-draggable .picture .open {
+      position: absolute;
+      top: 4px;
+      right: 5px;
+      padding: 0 0.3em;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      text-decoration: none;
+      color: var(--muted);
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .cards-draggable .card.is-live:hover .picture .open { opacity: 1; }
+    .cards-draggable .picture .open:hover { color: white; background: var(--accent); animation: none; }
+    .cards-draggable .card .name {
+      display: block;
+      font-family: "Cutive Mono", "Courier New", monospace;
+      margin-top: 0.25rem;
+      text-align: center;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .cards-draggable .card .name:hover,
+    .cards-draggable .card.is-dragged .name { color: var(--accent); background: none; animation: none; }
+
+    .since video {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid var(--rule);
+      background: white;
+    }
+
+    .since figure { margin: 0; min-width: 0; }
+
+    .since > p { margin: 1.8rem 0 0.8rem; }
+    .since figcaption cite { display: block; font-style: normal; font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+    .since > p:first-child { margin-top: 0; }
+
+    .since figcaption { font-size: 0.95rem; color: var(--ink); line-height: 1.5; margin-top: 0.6rem; }
+
+    /* the permutation lab, live (js/perm.js): the talk's 960×540 canvas scaled to the column,
+       played by a ghost hand until you click to take over */
+    .perm-live {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--rule);
+      background: white;
+    }
+    .perm-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+    .perm-ghost {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 2;
+    }
+    .perm-badge {
+      position: absolute;
+      right: 0.6rem;
+      bottom: 0.4rem;
+      pointer-events: none;
+      font-family: "Cutive Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .perm-badge .when-ghost::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-right: 0.4em;
+      border-radius: 50%;
+      background: var(--accent);
+      vertical-align: 0.1em;
+    }
+    .perm-live .when-ghost, .perm-live.ghosting .when-yours { display: none; }
+    .perm-live.ghosting .when-ghost { display: inline; }
+    .perm-live:not(.ghosting) > .live-tag { display: none; }
+    .perm-live.ghosting:hover .perm-badge { opacity: 0; }
+
+    /* The live figures' red tag (js/perm.js, js/fig1.js, cards.js), cut like the Best Paper one,
+       popping up on hover to say what to do */
+    .live-tag {
+      position: absolute;
+      left: 50%;
+      bottom: 0.8rem;
+      z-index: 3;
+      isolation: isolate;
+      padding: 0.2rem 0.85rem 0.25rem;
+      font-family: "Cutive Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      color: white;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, 8px) rotate(-1.2deg) scale(0.85);
+      transition: opacity 0.15s ease, transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+    }
+    .live-tag::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--accent);
+      transform: skewX(-6deg);
+      clip-path: polygon(7px 0, calc(100% - 3px) 0, 100% 5px, 100% calc(100% - 8px),
+          calc(100% - 5px) 100%, 3px 100%, 0 calc(100% - 4px), 0 6px);
+    }
+    :hover > .live-tag { opacity: 1; transform: translate(-50%, 0) rotate(-1.2deg) scale(1); }
+    :active > .live-tag { opacity: 0; }
+
+    /* Figure 1, live (js/fig1.js): the paper's figure, in its 1600px coordinates, scaled to the column */
+    .fig1-live { position: relative; }
+    /* stuck on the bottom edge of the view's card (left and top set by js/fig1.js) */
+    .fig1-live > .live-tag {
+      bottom: auto;
+      /* small enough to fit between the tiles and caption 1 */
+      font-size: 0.78rem;
+      padding: 0.1rem 0.7rem 0.14rem;
+      transform-origin: 0 50%;
+      transform: translate(0, calc(-50% + 6px)) rotate(-1.2deg) scale(0.85);
+    }
+    .fig1-live:hover > .live-tag { transform: translate(0, -50%) rotate(-1.2deg) scale(1); }
+    .fig1-stage {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .fig1-streak { animation: fig1-streak 420ms ease-out forwards; }
+    @keyframes fig1-streak { from { opacity: 0.9; } to { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .fig1-streak { display: none; }
+    }
+
+    .panels video { aspect-ratio: 5 / 4; object-fit: cover; }
+
+    .panels {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.2rem;
+    }
+
+    blockquote {
+      position: relative;
+      margin: 1.2rem 0;
+      padding: 0.2rem 0 0.2rem calc(1.1rem + 3px);
+    }
+
+    /* the quote bar is drawn rather than a border, so its ends can be rounded */
+    blockquote::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      border-radius: 3px;
+      background: var(--accent);
+    }
+
+    /* the speaker signs the quote, in the accent red so it's clearly a quote */
+    blockquote cite {
+      display: block;
+      font-style: normal;
+      /* the page's Open Sans is only loaded in Light, so a real bold comes from the system face */
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-top: 0.4rem;
+    }
+
+    pre {
+      max-width: 100%;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      overflow-x: auto;
+      background: var(--card);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+    }
+
+    footer { margin-top: 3.5rem; font-size: 0.85rem; color: var(--muted); }
+
+
+    @media (max-width: 560px) {
+      body { font-size: 17px; }
+      .demos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panels { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      a:hover { animation: none; }
+    }
+  </style>
+  <!-- Dragology (built from the repo) for the draggable link pills; React from a CDN -->
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.2.0",
+        "react/jsx-runtime": "https://esm.sh/react@19.2.0/jsx-runtime",
+        "react-dom": "https://esm.sh/react-dom@19.2.0?deps=react@19.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.2.0/client?deps=react@19.2.0"
+      }
+    }
+  </script>
+  <script type="module" src="pills.js"></script>
+  <script type="module" src="cards.js"></script>
+  <script type="module" src="js/whiteboard.js"></script>
+  <script type="module" src="js/perm.js"></script>
+  <script type="module" src="js/fig1.js"></script>
+</head>
+
+<body>
+  <main>
+
+    <h1>Declarative Dragging</h1>
+    <p class="byline">
+      <a href="https://joshuahhh.com/">Joshua Horowitz</a>,
+      <a href="https://andrewblinn.com/">Andrew Blinn</a>,
+      <a href="https://homes.cs.washington.edu/~jheer/">Jeffrey Heer</a>
+    </p>
+    <span class="award">★ <a href="https://uist.acm.org/2026/awards/#best-paper">Best Paper Award</a>, UIST 2026</span>
+
+    <nav class="links" aria-label="Links">
+      <a class="paper" href="https://andrewblinn.com/papers/D2.pdf"><svg class="pdf" viewBox="0 0 16 20" aria-hidden="true"><path d="M2 1h8l5 5v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 1v5h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><text x="8" y="15.5" text-anchor="middle" font-size="5.2" font-family="system-ui, sans-serif" font-weight="700" fill="currentColor">PDF</text></svg>paper</a>
+      <a href="https://www.youtube.com/watch?v=l7v-UwpsEbk">video</a>
+      <a href="uist26/">explorable supplement</a>
+      <a href="https://joshuahhh.com/dragology/#/demos">demos</a>
+      <a href="https://github.com/declarative-dragging/dragology" class="icon" aria-label="code on GitHub" title="code on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <a href="https://www.npmjs.com/package/dragology" class="icon" aria-label="dragology on npm" title="dragology on npm"><svg class="npm" viewBox="0 0 18 7" aria-hidden="true"><path fill-rule="evenodd" d="M0 0h18v6H9v1H5V6H0V0zm1 1v4h2V2h1v3h1V1H1zm5 0v5h2V5h2V1H6zm2 1h1v2H8V2zm3-1v4h2V2h1v3h1V2h1v3h1V1h-6z"/></svg></a>
+    </nav>
+
+    <p class="hook">What if making a diagram draggable was as simple as specifying what it can become?</p>
+    <div class="lede">
+      <p>
+        Drag-and-drop makes the digital graspable. But designing bespoke drag interactions involves a lot of fiddly code to
+        handle geometry, feedback, and animations. As a result, many people, from educators to game designers,
+        mathematicians to creative tool builders, often don't bother.
+      </p>
+      <p>
+        <strong>Declarative dragging</strong> inverts the problem. Rather than programming all that visual behavior directly, you
+        simply say, for each element you want to make draggable, which future states of your application dragging it
+        should lead to. Our system speculatively renders those states to work
+        out where things can go, then combines these possible worlds into a smooth, responsive drag-and-drop
+        interaction.
+      </p>
+      <p>
+        Our goal with this project is to let people who think in abstractions keep working within the semantic
+        worlds they inhabit, while helping them turn the rules of their worlds into rich tactile interactions in ours.
+      </p>
+    </div>
+
+    <div class="video">
+      <a class="video-poster" href="https://www.youtube.com/watch?v=l7v-UwpsEbk" aria-label="Play the video">
+        <img src="video-poster.webp" width="1600" height="900"
+          alt="Title card: Declarative Dragging, with illustrations labelled Model-Driven and Composable." />
+        <span class="play"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 2l14 8-14 8z" /></svg></span>
+      </a>
+    </div>
+    <p class="note">A five-minute video introducing declarative dragging.</p>
+
+    <h2>How it works</h2>
+    <p>
+      D2 is <em>model-driven</em>: An interface author makes an element draggable by specifying which future model
+      states should be accessible by dragging it. An engine speculatively renders these states to view trees,
+      extracts the position of the dragged element in each of these renderings, and uses these to synthesize a
+      drag-and-drop interaction, all without detailed work required by the interface author.
+    </p>
+    <figure class="bleed" id="fig1-figure">
+      <img src="how-it-works.webp" width="1600" height="596" loading="lazy"
+        alt="Diagram: a model state is rendered to a view; when a drag starts, possible target states are rendered speculatively, and where the dragged element lands in each becomes a drop zone for an animated drag." />
+      <figcaption>
+        Dragology is a library implementing “declarative dragging”: a new way for interface developers to make
+        higher-quality drag-and-drop interactions with less work. Dragology enables model-driven dragging.
+      </figcaption>
+    </figure>
+    <p>
+      To provide greater expressive range and customizability, D2 is <em>composable</em>: simple model-driven
+      drag-and-drop behaviors can be combined to create more complex ones, and modifiers can layer features like
+      floating, snapping, and transitions. For more details, see
+      <a href="https://andrewblinn.com/papers/D2.pdf">the paper</a>.
+    </p>
+
+    <h2>Dragology demos</h2>
+    <p>
+      We implemented D2 in a library called <a href="https://github.com/declarative-dragging/dragology">Dragology</a>, built
+      for SVG interfaces on the web.
+    </p>
+    <div class="demos">
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/animate-algebra-tree"><video src="clips/animate-algebra.mp4" autoplay muted loop playsinline preload="metadata"></video><span>algebra</span></a>
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/twisted-trees"><video src="clips/twisted-trees.mp4" autoplay muted loop playsinline preload="metadata"></video><span>twisted trees</span></a>
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/bezier"><video src="clips/bezier.mp4" autoplay muted loop playsinline preload="metadata"></video><span>bézier curve</span></a>
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/braid-old"><video src="clips/braid.mp4" autoplay muted loop playsinline preload="metadata"></video><span>braid</span></a>
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/card-piles"><video src="clips/card-piles.mp4" autoplay muted loop playsinline preload="metadata"></video><span>card piles</span></a>
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/face-creator"><video src="clips/face.mp4" autoplay muted loop playsinline preload="metadata"></video><span>face</span></a>
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/sprouting-tree"><video src="clips/sprouting-tree.mp4" autoplay muted loop playsinline preload="metadata"></video><span>sprouting tree</span></a>
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/tromino"><video src="clips/tromino.mp4" autoplay muted loop playsinline preload="metadata"></video><span>trominoes</span></a>
+    </div>
+    <p class="note">
+      See our <a href="https://joshuahhh.com/dragology/#/demos">demo gallery</a> for many more interactives built with
+      Dragology.
+    </p>
+
+    <h2>Where it came from</h2>
+    <blockquote>
+      Back in 2022, I had a prototype of a game aimed at making math more tangible, a long-running obsession of
+      mine. It had a lot going for it, but the fundamental mechanic, based on selecting transformations from a menu,
+      lacked the juicy tactility I craved. I eventually came up with a primitive version of what would become
+      model-driven dragging, but implementing it seemed daunting, so it sat on my whiteboard for the next two years,
+      haunting me every time I went to make a sandwich.
+      <cite>— Andrew</cite>
+    </blockquote>
+    <figure class="whiteboard">
+      <img src="whiteboard-2023-06.webp" width="1400" height="1131" loading="lazy"
+        alt="A whiteboard titled 'nool' covered in small algebraic expression trees, with arrows showing how each rewrite rule would be dragged, a section labelled CONFLICT, and a row labelled DISAMBIGUATION STAGE listing choice tree, overlap-click, default-drag and split-drag." />
+      <figcaption>Andrew's whiteboard in June 2023, sketching a basic version of model-driven dragging for tree rewriting.</figcaption>
+    </figure>
+    <blockquote>
+      On a really nice walk in Seattle back in 2023, Andrew shared his draggy ideas with me. I kept thinking about
+      them over the years, but didn't do anything about it. And then last year, it all came together. My buddy Elliot
+      was playing with order-preserving maps between trees. I came up with a fun way to draw these structures, but I
+      realized I didn't just want to draw them – I wanted to reach in and pull them around, and feel out their
+      dynamics (what became the twisted trees demo above). That felt pretty tough, until I remembered Andrew's ideas.
+      I got working on a library that, with Andrew's help, grew into declarative dragging.
+      <cite>— Josh</cite>
+    </blockquote>
+
+    <h2>Since the paper</h2>
+    <div class="since">
+      <p>
+        Josh has been working on a variety of new, more intricate mathematical explorables. We've found Dragology
+        particularly suited to interfaces that combine parallel representations, where you see the same system from
+        different perspectives. In the permutation lab below, interacting with any one representation fluidly updates
+        the others, even halfway through a drag, showing their relationships in real time.
+      </p>
+      <figure class="wide" id="perm-figure">
+        <a href="https://joshuahhh.com/dragology/#/demos/permutation-lab"><video src="clips/permutation-lab.mp4" autoplay muted loop playsinline preload="metadata"></video></a>
+        <figcaption>
+          One permutation, several notations, all in sync.
+          <a href="https://joshuahhh.com/dragology/#/demos/permutation-lab">Permutation lab</a>
+        </figcaption>
+      </figure>
+      <p>
+        Andrew has been working to bring declarative dragging to existing applications, including his research on user
+        interfaces for programming languages, as well as restarting work on the math game concept that
+        kicked it all off.
+      </p>
+      <div class="panels">
+        <figure>
+          <a href="https://hazel.org/"><video src="clips/hazel-refactoring.mp4" autoplay muted loop playsinline preload="metadata"></video></a>
+          <figcaption>
+            <a href="https://hazel.org/">Hazel</a> is an academic programming environment where every edit keeps your
+            code meaningful. Using declarative dragging, refactorings become tangible and discoverable.
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="https://andrewblinn.com/supernool/"><video src="clips/nool-3d.mp4" autoplay muted loop playsinline preload="metadata"></video></a>
+          <figcaption>
+            Not long after submitting the paper, Andrew began working on his <a href="https://andrewblinn.com/supernool/">math game</a>
+            again, adapting declarative dragging to the gamepad and moving off the 2D canvas into a 3D world.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <h2>Cite</h2>
+    <pre class="mono">@inproceedings{horowitz2026declarative,
+  title     = {Declarative Dragging},
+  author    = {Horowitz, Joshua and Blinn, Andrew and Heer, Jeffrey},
+  booktitle = {Proceedings of the 39th Annual ACM Symposium on
+               User Interface Software and Technology (UIST '26)},
+  year      = {2026}
+}</pre>
+
+  </main>
+
+  <script>
+    // Swap the video's still for the YouTube player, already playing.
+    document.querySelector(".video-poster").addEventListener("click", (e) => {
+      e.preventDefault();
+      const iframe = document.createElement("iframe");
+      iframe.src = "https://www.youtube-nocookie.com/embed/l7v-UwpsEbk?rel=0&autoplay=1";
+      iframe.title = "Dragology: UIST 2026 video";
+      iframe.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen";
+      iframe.allowFullscreen = true;
+      e.currentTarget.replaceWith(iframe);
+    });
+
+    // Only play the clips that are on screen.
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) e.isIntersecting ? e.target.play().catch(() => { }) : e.target.pause();
+    });
+    document.querySelectorAll("video").forEach((v) => io.observe(v));
+  </script>
+
+</body>
+
+</html>
