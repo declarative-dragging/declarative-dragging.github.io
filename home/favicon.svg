@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><defs><filter id="blur1.25" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.25"/></filter></defs>
+  
+  <rect x="14.75" y="15.75" width="17.5" height="17.5" rx="2.975" fill="rgba(194,71,200,0.05)" stroke="#c247c8" stroke-width="0.7875" stroke-dasharray="1.925 1.4875"/>
+  <rect x="35" y="15.75" width="17.5" height="17.5" rx="2.975" fill="#f9e4b0" stroke="#e2b54e" stroke-width="0.875"/><rect x="14.75" y="36" width="17.5" height="17.5" rx="2.975" fill="#c4f0dc" stroke="#5cc88a" stroke-width="0.875"/><rect x="35" y="36" width="17.5" height="17.5" rx="2.975" fill="#f3b7b9" stroke="#d9666c" stroke-width="0.875"/>
+  <rect x="11.225" y="11.75" width="17.5" height="17.5" rx="2.975" fill="rgba(0,0,0,0.22)" filter="url(#blur1.25)" transform="rotate(-7 18.75 18.75)"/><rect x="10" y="10" width="17.5" height="17.5" rx="2.975" fill="#cde7fc" stroke="#7ab9ef" stroke-width="0.875" transform="rotate(-7 18.75 18.75)"/>
+</svg>
