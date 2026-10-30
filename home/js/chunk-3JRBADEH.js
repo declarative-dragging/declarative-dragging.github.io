@@ -1,1 +1,0 @@
-import{B as n,D as a,i as t,z as e}from"./chunk-TLRC7KFT.js";import{jsx as V}from"react/jsx-runtime";function h({tip:i,direction:p,headAngleRad:c=Math.PI/4,headLength:o=20,...m}){let l=t(i),s=t(p),r=o*Math.tan(c/2);return V("polygon",{transform:e(l)+n(s.angleRad()),points:a([0,0],[-o,r],[-o,-r]),...m})}export{h as a};

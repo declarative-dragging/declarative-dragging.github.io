@@ -400,29 +400,23 @@
       transition: opacity 0.3s ease;
       z-index: 2;
     }
-    .perm-badge {
-      position: absolute;
-      right: 0.6rem;
-      bottom: 0.4rem;
-      pointer-events: none;
-      font-family: "Cutive Mono", "Courier New", monospace;
-      font-size: 0.75rem;
-      color: var(--muted);
+    /* What to do, as a red tag on hover (below): "click to take over" while the ghost plays, "your turn /
+       drag anything" once it's yours. Both hang over the lower right corner, outside .perm-live (which clips),
+       where they hide nothing. */
+    .perm-wrap { position: relative; }
+    .perm-live:not(.ghosting) ~ .tag-ghost, .perm-live.ghosting ~ .tag-yours { display: none; }
+    .perm-wrap > .live-tag {
+      left: auto;
+      right: -0.8rem;
+      bottom: -0.95rem;
+      font-size: 0.85rem;
+      line-height: 1.25;
+      padding: 0.2rem 0.7rem 0.25rem;
+      transform-origin: 100% 100%;
+      transform: translate(0, 6px) rotate(-1.8deg) scale(0.85);
     }
-    .perm-badge .when-ghost::before {
-      content: "";
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      margin-right: 0.4em;
-      border-radius: 50%;
-      background: var(--accent);
-      vertical-align: 0.1em;
-    }
-    .perm-live .when-ghost, .perm-live.ghosting .when-yours { display: none; }
-    .perm-live.ghosting .when-ghost { display: inline; }
-    .perm-live:not(.ghosting) > .live-tag { display: none; }
-    .perm-live.ghosting:hover .perm-badge { opacity: 0; }
+    .perm-wrap:hover > .live-tag { opacity: 1; transform: rotate(-1.8deg) scale(1); }
+    .perm-wrap:active > .live-tag { opacity: 0; }
 
     /* The live figures' red tag (js/perm.js, js/fig1.js, cards.js), cut like the Best Paper one,
        popping up on hover to say what to do */
