@@ -138,7 +138,7 @@
       margin: 1.85rem 0 2.2rem;
     }
 
-    nav.links a {
+    .links a {
       font-family: "Cutive Mono", "Courier New", monospace;
       font-size: 0.95rem;
       text-decoration: none;
@@ -151,13 +151,13 @@
       transition: rotate 0.15s ease-out;
     }
 
-    nav.links a svg { width: 1.05em; height: 1.05em; fill: currentColor; }
-    nav.links a svg.npm { width: 2.4em; height: 0.95em; }
-    nav.links a.icon { border-color: transparent; }
-    /* the draggable version of the row: pulled out by its padding so the pills sit where the static ones did */
-    .pills-draggable { margin: -6px; position: relative; z-index: 5; }
-    /* the pill being dragged keeps its hover look, wherever the pointer is */
-    .pills-draggable a.is-dragged {
+    .links a svg { width: 1.05em; height: 1.05em; fill: currentColor; }
+    .links a svg.npm { width: 2.4em; height: 0.95em; }
+    .links a.icon { border-color: transparent; }
+    /* header.js: the title, names, award and links, as one draggable list of lines */
+    .header-draggable { display: flow-root; position: relative; z-index: 5; transition: height 250ms cubic-bezier(.3,.7,.4,1); }
+    .header-draggable svg { display: block; overflow: visible; }
+    .header-draggable .links a.is-dragged {
       color: white;
       border-color: transparent;
       background: var(--link-gradient);
@@ -166,20 +166,21 @@
       rotate: 1.5deg;
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
     }
-    .pills-draggable svg { display: block; overflow: visible; }
+    .header-draggable .is-dragged:not(.links) { rotate: 1.5deg; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.14)); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
     /* the paper itself is the main link: filled, with a document icon */
-    nav.links a.paper { gap: 0.675em; background: var(--ink); color: white; border-color: var(--ink); }
-    nav.links a.paper:hover { background: var(--link-gradient); background-size: 800% 800%; border-color: transparent; }
-    nav.links a.paper svg.pdf { width: 0.95em; height: 1.2em; fill: none; }
+    .links a.paper { gap: 0.675em; background: var(--ink); color: white; border-color: var(--ink); }
+    .links a.paper:hover { background: var(--link-gradient); background-size: 800% 800%; border-color: transparent; }
+    .links a.paper svg.pdf { width: 0.95em; height: 1.2em; fill: none; }
 
-    nav.links a:nth-child(2) { border-radius: 12px 18px 11px 17px / 16px 10px 15px 11px; }
-    nav.links a:nth-child(3) { border-radius: 16px 10px 18px 13px / 11px 15px 12px 17px; }
-    nav.links a:nth-child(4) { border-radius: 10px 17px 13px 18px / 15px 12px 17px 10px; }
-    nav.links a:nth-child(5) { border-radius: 17px 13px 10px 16px / 12px 17px 14px 11px; }
-    nav.links a:nth-child(6) { border-radius: 13px 16px 17px 11px / 17px 11px 12px 16px; }
+    .links a:nth-child(2) { border-radius: 12px 18px 11px 17px / 16px 10px 15px 11px; }
+    .links a:nth-child(3) { border-radius: 16px 10px 18px 13px / 11px 15px 12px 17px; }
+    .links a:nth-child(4) { border-radius: 10px 17px 13px 18px / 15px 12px 17px 10px; }
+    .links a:nth-child(5) { border-radius: 17px 13px 10px 16px / 12px 17px 14px 11px; }
+    .links a:nth-child(6) { border-radius: 13px 16px 17px 11px / 17px 11px 12px 16px; }
 
-    nav.links a:hover { border-color: transparent; rotate: 1.5deg; }
+    .links a:hover { border-color: transparent; rotate: 1.5deg; }
 
     .hook {
       font-size: clamp(1.5rem, 4.2vw, 1.9rem);
@@ -536,7 +537,7 @@
       a:hover { animation: none; }
     }
   </style>
-  <!-- Dragology (built from the repo) for the draggable link pills; React from a CDN -->
+  <!-- Dragology (built from the repo) for the draggable header; React from a CDN -->
   <script type="importmap">
     {
       "imports": {
@@ -547,7 +548,7 @@
       }
     }
   </script>
-  <script type="module" src="pills.js"></script>
+  <script type="module" src="header.js"></script>
   <script type="module" src="cards.js"></script>
   <script type="module" src="js/whiteboard.js"></script>
   <script type="module" src="js/perm.js"></script>

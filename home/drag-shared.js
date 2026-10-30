@@ -1,4 +1,4 @@
-// Pieces shared by the page's draggables (the link pills and the demo cards).
+// Pieces shared by the page's draggables (the header, the link pills of pills.js, and the demo cards).
 
 import React from "react";
 import { createRoot } from "react-dom/client";
