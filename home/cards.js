@@ -2,9 +2,10 @@
 // (clips/<name>.mp4) until the pointer comes over it; then it goes live
 // (js/cards-demos.js), starting where the clip had got to (each clip's log,
 // clips/<name>.log.json, says which state it showed when). Once the pointer
-// is on the cards, every clip holds still; a few seconds after it leaves
-// them, every card goes back to its clip, from where that clip stopped, and
-// they all play again. (?cards=live: every card live from the start.)
+// is on any card, every card goes live at once, so moving from one to the
+// next changes nothing; a few seconds after it leaves them, every card goes
+// back to its clip, from where that clip stopped, and they all play again.
+// (?cards=live: every card live from the start.)
 //
 // The static grid stays in the HTML as the no-JS version (and on touch
 // screens, where dragging the grid would get in the way of scrolling, and in
@@ -16,7 +17,7 @@
 // A card is picked up by its name, which is also its link to the full demo; a
 // press inside the live picture works the demo instead.
 
-import { createElement, useState } from "react";
+import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { DraggableRenderer, translate } from "./js/dragology.js";
 import { h, isWebKit, move, targetLines } from "./drag-shared.js";
@@ -63,14 +64,12 @@ const resumeAt = new Map();
  * holding still while the reader is at the cards */
 const playing = { io: null, shown: new Set(), quiet: false };
 
-/** Live from where `video` is, unless the pointer has left it meanwhile */
+/** Live from where `video` is */
 async function goLive(id, video) {
   const log = await loadLog(video.getAttribute("src"));
-  if (!PHONE_LIVE && !video.matches(":hover")) return false;
   const initial = log ? stateAt(log, video.currentTime) : undefined;
   video.pause();
   wentLive.set(id, { initial, at: video.currentTime });
-  return true;
 }
 
 // # The draggable grid (desktop)
@@ -79,7 +78,6 @@ async function goLive(id, video) {
 function Card({ spec, width, dragging, live }) {
   // While dragged, a card wears its hover look whether or not the pointer is over it.
   const className = dragging ? "card is-dragged" : "card";
-  const [, rerender] = useState(0);
   if (!live?.CARD_DEMOS[spec.demoId]) {
     // No live version: the static card, its clip and caption. Its HTML is set
     // once and left alone, so its video keeps playing through drags.
@@ -108,9 +106,6 @@ function Card({ spec, width, dragging, live }) {
           if (!resumeAt.has(spec.id)) return;
           e.currentTarget.currentTime = resumeAt.get(spec.id);
           resumeAt.delete(spec.id);
-        },
-        onPointerEnter: async (e) => {
-          if (await goLive(spec.id, e.currentTarget)) rerender((n) => n + 1);
         },
       });
   return h(
@@ -247,9 +242,10 @@ async function desktop() {
 
   // Only play the clips that are on screen, as the static grid did, and none
   // while the reader is at the cards: once the pointer comes onto one, every
-  // clip holds still (the one under it goes live). QUIET_MS after the pointer
-  // has left the cards (and any drag is done), every live card goes back to
-  // its clip, from where that clip stopped, and they all play again.
+  // card goes live at once, each from where its clip was, so that moving from
+  // one to the next changes nothing. QUIET_MS after the pointer has left the
+  // cards (and any drag is done), every card goes back to its clip, from where
+  // that clip stopped, and they all play again.
   let wake;
   let pressed = false;
   const { shown } = playing;
@@ -260,11 +256,16 @@ async function desktop() {
       e.isIntersecting && !playing.quiet ? e.target.play().catch(() => {}) : e.target.pause();
     }
   }));
-  host.addEventListener("pointerover", (e) => {
+  host.addEventListener("pointerover", async (e) => {
     if (!e.target.closest?.("[data-card]")) return;
-    playing.quiet = true;
     clearTimeout(wake);
-    host.querySelectorAll("video.clip-video").forEach((v) => v.pause());
+    if (playing.quiet) return;
+    playing.quiet = true;
+    const clips = [...host.querySelectorAll("[data-card] video.clip-video")];
+    clips.forEach((v) => v.pause());
+    await Promise.all(clips.map((v) => goLive(v.closest("[data-card]").dataset.card, v)));
+    // (unless they've gone back to their clips meanwhile)
+    if (playing.quiet) render();
   });
   host.addEventListener("pointerdown", () => { pressed = true; }, true);
   document.addEventListener("pointerup", () => { pressed = false; }, true);
