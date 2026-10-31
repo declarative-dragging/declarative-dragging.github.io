@@ -350,8 +350,11 @@ function Header({ m, host }) {
 }
 
 async function main() {
-  // In Safari the header stays static.
-  if (isWebKit) return;
+  // In Safari the header stays static, and on touch screens, where dragging
+  // it would get in the way of scrolling (but for the phone review page,
+  // whose live parts are there to try)
+  const phoneLive = document.documentElement.hasAttribute("data-phone-live");
+  if (isWebKit || !(phoneLive || matchMedia("(hover: hover) and (pointer: fine)").matches)) return;
   await document.fonts.ready;
   const main = document.querySelector("main");
   const m = measure(main);
