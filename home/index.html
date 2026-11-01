@@ -538,6 +538,8 @@
     }
     /* a card's clip, until it goes live */
     .cards-draggable .picture video.clip-video { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border: 0; border-radius: 0; }
+    /* the walk: the map, and Josh's drawings over it (baked from walk/layout.json) */
+    .walk img { border: 1px solid var(--rule); }
   </style>
   <!-- Dragology (built from the repo) for the draggable header; React from a CDN -->
   <script type="importmap">
@@ -671,6 +673,11 @@
       I got working on a library that, with Andrew's help, grew into declarative dragging.
       <cite>— Josh</cite>
     </blockquote>
+    <figure class="walk" id="walk-figure">
+      <img src="walk/walk-figure.webp" width="1500" height="1152" loading="lazy"
+        alt="A map of a walk through Capitol Hill in Seattle, its route in orange, with Josh's drawings of order-preserving maps between small trees laid over it: a hand-drawn lattice of trees with strands running between them, a computer-drawn version of the same lattice, and single trees cut from them." />
+      <figcaption>Our walk in Seattle in 2023, and Josh's drawings, two years later, of the order-preserving maps between trees that became the twisted trees demo.</figcaption>
+    </figure>
 
     <h2>Since the paper</h2>
     <div class="since">
