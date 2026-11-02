@@ -52,9 +52,10 @@
       --link-gradient: var(--accent);
     }
 
+    /* the hover's rainbow drifts as the homepage's does (style.css) */
     @keyframes drift {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
+      0% { background-position: 0% 0%; }
+      100% { background-position: 400% 0%; }
     }
 
     * { box-sizing: border-box; }
@@ -89,7 +90,7 @@
       text-decoration: none;
       background: var(--link-gradient);
       background-size: 800% 800%;
-      animation: drift 6s linear infinite alternate;
+      animation: drift 12s linear infinite alternate;
     }
 
 
@@ -110,8 +111,8 @@
       display: inline-block;
       margin: 1.25rem 0 0;
       padding: 0.2rem 0.85rem 0.25rem;
-      font-family: "Cutive Mono", "Courier New", monospace;
-      font-size: 0.95rem;
+      font-family: "Silkscreen", "Cutive Mono", monospace;
+      font-size: 0.855rem;
       color: white;
       transform: rotate(-1.2deg);
     }
@@ -139,8 +140,8 @@
     }
 
     .links a {
-      font-family: "Cutive Mono", "Courier New", monospace;
-      font-size: 0.95rem;
+      font-family: "Silkscreen", "Cutive Mono", monospace;
+      font-size: 0.874rem;
       text-decoration: none;
       border: 1px solid var(--ink);
       padding: 0.25rem 0.85rem;
@@ -148,7 +149,7 @@
       display: inline-flex;
       align-items: center;
       transform-origin: top left;
-      transition: rotate 0.15s ease-out;
+      transition: rotate 0.15s ease-out, translate 0.06s ease-out;
     }
 
     .links a svg { width: 1.05em; height: 1.05em; fill: currentColor; }
@@ -157,21 +158,12 @@
     /* header.js: the title, names, award and links, as one draggable list of lines */
     .header-draggable { display: flow-root; position: relative; z-index: 5; transition: height 250ms cubic-bezier(.3,.7,.4,1); }
     .header-draggable svg { display: block; overflow: visible; }
-    .header-draggable .links a.is-dragged {
-      color: white;
-      border-color: transparent;
-      background: var(--link-gradient);
-      background-size: 800% 800%;
-      animation: drift 6s linear infinite alternate;
-      rotate: 1.5deg;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
-    }
+    .header-draggable .links a.is-dragged { rotate: 1.5deg; filter: url(#dither-shadow); }
     .header-draggable .is-dragged:not(.links) { rotate: 1.5deg; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.14)); }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
     /* the paper itself is the main link: filled, with a document icon */
     .links a.paper { gap: 0.675em; background: var(--ink); color: white; border-color: var(--ink); }
-    .links a.paper:hover { background: var(--link-gradient); background-size: 800% 800%; border-color: transparent; }
     .links a.paper svg.pdf { width: 0.95em; height: 1.2em; fill: none; }
 
     .links a:nth-child(2) { border-radius: 12px 18px 11px 17px / 16px 10px 15px 11px; }
@@ -181,6 +173,26 @@
     .links a:nth-child(6) { border-radius: 13px 16px 17px 11px / 17px 11px 12px 16px; }
 
     .links a:hover { border-color: transparent; rotate: 1.5deg; }
+
+    /* The pills are buttons: the paper black, the others gray, each on an
+       edge a few pixels deep that it sinks onto while pressed. Lit (hovered
+       or dragged), each takes a color of its own, the four of the page's
+       figures, and its edge a dark of it. */
+    .links a:not(.icon) { box-shadow: 0 3px 0 #a6a49e; }
+    .links a:not(.paper):not(.icon) { background: #e4e1d9; border-color: #e4e1d9; }
+    .links a.paper { --lit: #dc3400; --lit-edge: #6e1a00; }
+    .links a.pill-video { --lit: #2563eb; --lit-edge: #133276; }
+    .links a.pill-demos { --lit: #16a34a; --lit-edge: #0b5225; }
+    .links a.pill-supplement { --lit: #e2a400; --lit-edge: #715200; }
+    .links a:not(.icon):hover,
+    .header-draggable .links a:not(.icon).is-dragged {
+      color: white;
+      background: var(--lit);
+      border-color: var(--lit);
+      animation: none;
+      box-shadow: 0 3px 0 var(--lit-edge);
+    }
+    .links a:not(.icon):active:not(.is-dragged) { translate: 0 3px; box-shadow: none; }
 
     .hook {
       font-size: clamp(1.5rem, 4.2vw, 1.9rem);
@@ -196,7 +208,7 @@
       font-size: 1.5rem;
       margin: 3.2rem 0 0.6rem;
       padding-top: 1.2rem;
-      border-top: 1px solid var(--rule);
+      border-top: 1px solid #d6d2c6;
     }
 
     /* the video starts as a still in a thin red frame; clicking swaps in the YouTube player */
@@ -291,10 +303,10 @@
 
     .demos .card span {
       display: block;
-      font-family: "Cutive Mono", "Courier New", monospace;
+      font-family: "Silkscreen", "Cutive Mono", monospace;
       margin-top: 0.25rem;
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.76rem;
     }
 
     .demos .card:hover span { color: var(--accent); }
@@ -318,7 +330,7 @@
     .cards-draggable svg { display: block; overflow: visible; }
     .cards-draggable .card.is-dragged { rotate: 1.5deg; }
     .cards-draggable .card.is-dragged span { color: var(--accent); }
-    .cards-draggable .card.is-dragged video { box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14); }
+    .cards-draggable .card.is-dragged video { filter: url(#dither-shadow); }
 
     /* a live card: its demo running in the picture, picked up (and opened) by its name */
     .cards-draggable .card.is-live:hover { rotate: none; }
@@ -335,7 +347,7 @@
       transition: border-color 0.2s ease;
     }
     .cards-draggable .card.is-live:hover .picture { border-color: #d6d2c6; }
-    .cards-draggable .card.is-live.is-dragged .picture { box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14); }
+    .cards-draggable .card.is-live.is-dragged .picture { filter: url(#dither-shadow); }
     .cards-draggable .picture .clip video { border: 0; border-radius: 0; }
     .cards-draggable .picture .open {
       position: absolute;
@@ -354,10 +366,10 @@
     .cards-draggable .picture .open:hover { color: white; background: var(--accent); animation: none; }
     .cards-draggable .card .name {
       display: block;
-      font-family: "Cutive Mono", "Courier New", monospace;
+      font-family: "Silkscreen", "Cutive Mono", monospace;
       margin-top: 0.25rem;
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       text-decoration: none;
     }
     .cards-draggable .card .name:hover,
@@ -539,8 +551,57 @@
     /* a card's clip, until it goes live */
     .cards-draggable .picture video.clip-video { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border: 0; border-radius: 0; }
     /* the walk: the map, and Josh's drawings over it (baked from walk/layout.json) */
-    .walk img { border: 1px solid var(--rule); }
+    .walk img { border: 1px solid #ccc8bf; }
+
+    /* the photos and the like hold their edge with a darker border than the white figures */
+    figure.whiteboard img { border: 1px solid #b3aea3; }
+    .since video.nool-3d { border-color: #8f8b84; }
+
+    /* framed things: small corners but one, the bottom right, rounded wide.
+       The trominoes card keeps its corner, which would cut off a piece. */
+    .video, .bleed, figure img, .perm-live, .since video, pre, .demos video, .cards-draggable .picture {
+      border-bottom-right-radius: 28px;
+    }
+    .demos .card[href$="/tromino"] video,
+    .cards-draggable .card:has(.name[href$="/tromino"]) .picture { border-bottom-right-radius: 8px; }
+
+    /* the citation's copy button, at its top right */
+    .cite { position: relative; }
+    .cite .copy {
+      position: absolute;
+      top: 0.55rem;
+      right: 0.55rem;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 6px;
+      background: none;
+      color: var(--muted);
+    }
+    .cite .copy:hover { color: var(--ink); background: #eeece6; }
+    .cite .copy svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+
+    /* The pointer, wherever there's something to click or drag: a white
+       glove, pointing (cursors/glove.png). Pressed on, or dragging, it's a
+       fist (cursors/fist.png). Important, to win over the inline cursors
+       the draggables set. */
+    a[href], button, summary, [role="button"], [style*="cursor: pointer"], [style*="cursor: grab"], .wb-tap-stage, .perm-tap {
+      cursor: url("cursors/glove.png") 2 2, pointer !important;
+      cursor: -webkit-image-set(url("cursors/glove.png") 1x, url("cursors/glove@2x.png") 2x) 2 2, pointer !important;
+      cursor: image-set(url("cursors/glove.png") 1x, url("cursors/glove@2x.png") 2x) 2 2, pointer !important;
+    }
+    :root [style*="cursor: grab"]:active, :root .header-draggable a:active, :root .cards-draggable .name:active,
+    :root body[style*="grabbing"], :root body[style*="grabbing"] * {
+      cursor: url("cursors/fist.png") 6 5, grabbing !important;
+      cursor: -webkit-image-set(url("cursors/fist.png") 1x, url("cursors/fist@2x.png") 2x) 6 5, grabbing !important;
+      cursor: image-set(url("cursors/fist.png") 1x, url("cursors/fist@2x.png") 2x) 6 5, grabbing !important;
+    }
   </style>
+  <!-- the small labels' pixel face (the award, the link pills, the demo cards' names) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
   <!-- Dragology (built from the repo) for the draggable header; React from a CDN -->
   <script type="importmap">
     {
@@ -560,6 +621,24 @@
 </head>
 
 <body>
+  <!-- The dithered shadow under a dragged pill or demo card: its shape's
+    alpha, blurred and dropped, thresholded against a 4×4 Bayer matrix into
+    1px dots of a see-through dark, so they darken what's under them as a
+    blurred shadow does -->
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <filter id="dither-shadow" x="-25%" y="-25%" width="150%" height="170%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="7" />
+      <feOffset dy="10" />
+      <feComponentTransfer result="soft"><feFuncA type="linear" slope="0.75" /></feComponentTransfer>
+      <feImage href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%204%204%27%20shape-rendering%3D%27crispEdges%27%3E%3Crect%20x%3D%270%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.031%27%2F%3E%3Crect%20x%3D%271%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.531%27%2F%3E%3Crect%20x%3D%272%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.156%27%2F%3E%3Crect%20x%3D%273%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.656%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.781%27%2F%3E%3Crect%20x%3D%271%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.281%27%2F%3E%3Crect%20x%3D%272%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.906%27%2F%3E%3Crect%20x%3D%273%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.406%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.219%27%2F%3E%3Crect%20x%3D%271%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.719%27%2F%3E%3Crect%20x%3D%272%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.094%27%2F%3E%3Crect%20x%3D%273%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.594%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.969%27%2F%3E%3Crect%20x%3D%271%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.469%27%2F%3E%3Crect%20x%3D%272%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.844%27%2F%3E%3Crect%20x%3D%273%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27%20fill-opacity%3D%270.344%27%2F%3E%3C%2Fsvg%3E" x="0" y="0" width="4" height="4" preserveAspectRatio="none" />
+      <feTile result="bayer" />
+      <feComposite in="soft" in2="bayer" operator="arithmetic" k2="1" k3="-1" />
+      <feComponentTransfer result="dots"><feFuncA type="linear" slope="255" /></feComponentTransfer>
+      <feFlood flood-color="#2b2116" flood-opacity="0.27" />
+      <feComposite in2="dots" operator="in" />
+      <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+  </svg>
   <main>
 
     <h1>Declarative Dragging</h1>
@@ -572,9 +651,9 @@
 
     <nav class="links" aria-label="Links">
       <a class="paper" href="https://andrewblinn.com/papers/D2.pdf"><svg class="pdf" viewBox="0 0 16 20" aria-hidden="true"><path d="M2 1h8l5 5v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 1v5h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><text x="8" y="15.5" text-anchor="middle" font-size="5.2" font-family="system-ui, sans-serif" font-weight="700" fill="currentColor">PDF</text></svg>paper</a>
-      <a href="https://www.youtube.com/watch?v=l7v-UwpsEbk">video</a>
-      <a href="https://joshuahhh.com/dragology/#/demos">demos</a>
-      <a href="uist26/">explorable supplement</a>
+      <a class="pill-video" href="https://www.youtube.com/watch?v=l7v-UwpsEbk">video</a>
+      <a class="pill-demos" href="https://joshuahhh.com/dragology/#/demos">demos</a>
+      <a class="pill-supplement" href="uist26/">explorable supplement</a>
       <a href="https://github.com/declarative-dragging/dragology" class="icon" aria-label="code on GitHub" title="code on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
       <a href="https://www.npmjs.com/package/dragology" class="icon" aria-label="dragology on npm" title="dragology on npm"><svg class="npm" viewBox="0 0 18 7" aria-hidden="true"><path fill-rule="evenodd" d="M0 0h18v6H9v1H5V6H0V0zm1 1v4h2V2h1v3h1V1H1zm5 0v5h2V5h2V1H6zm2 1h1v2H8V2zm3-1v4h2V2h1v3h1V2h1v3h1V1h-6z"/></svg></a>
     </nav>
@@ -642,8 +721,8 @@
       <a class="card" href="https://joshuahhh.com/dragology/#/demos/braid-old"><video src="clips/braid.mp4" poster="clips/braid.webp" autoplay muted loop playsinline preload="metadata"></video><span>braid</span></a>
       <a class="card" href="https://joshuahhh.com/dragology/#/demos/card-piles"><video src="clips/card-piles.mp4" poster="clips/card-piles.webp" autoplay muted loop playsinline preload="metadata"></video><span>card piles</span></a>
       <a class="card" href="https://joshuahhh.com/dragology/#/demos/face-creator"><video src="clips/face.mp4" poster="clips/face.webp" autoplay muted loop playsinline preload="metadata"></video><span>face</span></a>
-      <a class="card" href="https://joshuahhh.com/dragology/#/demos/sprouting-tree"><video src="clips/sprouting-tree.mp4" poster="clips/sprouting-tree.webp" autoplay muted loop playsinline preload="metadata"></video><span>sprouting tree</span></a>
       <a class="card" href="https://joshuahhh.com/dragology/#/demos/tromino"><video src="clips/tromino.mp4" poster="clips/tromino.webp" autoplay muted loop playsinline preload="metadata"></video><span>trominoes</span></a>
+      <a class="card" href="https://joshuahhh.com/dragology/#/demos/sprouting-tree"><video src="clips/sprouting-tree.mp4" poster="clips/sprouting-tree.webp" autoplay muted loop playsinline preload="metadata"></video><span>sprouting tree</span></a>
     </div>
     <p class="note">
       See our <a href="https://joshuahhh.com/dragology/#/demos">demo gallery</a> for many more interactives built with
@@ -708,7 +787,7 @@
           </figcaption>
         </figure>
         <figure>
-          <a href="https://andrewblinn.com/supernool/"><video src="clips/nool-3d.mp4" autoplay muted loop playsinline preload="metadata"></video></a>
+          <a href="https://andrewblinn.com/supernool/"><video class="nool-3d" src="clips/nool-3d.mp4" autoplay muted loop playsinline preload="metadata"></video></a>
           <figcaption>
             Not long after submitting the paper, Andrew began working on his <a href="https://andrewblinn.com/supernool/">math game</a>
             again, adapting declarative dragging to the gamepad and moving off the 2D canvas into a 3D world.
@@ -718,13 +797,28 @@
     </div>
 
     <h2>Cite</h2>
-    <pre class="mono">@inproceedings{horowitz2026declarative,
+    <div class="cite">
+      <pre class="mono">@inproceedings{horowitz2026declarative,
   title     = {Declarative Dragging},
   author    = {Horowitz, Joshua and Blinn, Andrew and Heer, Jeffrey},
   booktitle = {Proceedings of the 39th Annual ACM Symposium on
                User Interface Software and Technology (UIST '26)},
   year      = {2026}
 }</pre>
+      <button type="button" class="copy" title="Copy the BibTeX" aria-label="Copy the BibTeX"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8.5" height="8.5" rx="1.6"/><path d="M10.5 3.6V3.2A1.4 1.4 0 0 0 9.1 1.8H3.2A1.4 1.4 0 0 0 1.8 3.2v5.9a1.4 1.4 0 0 0 1.4 1.4h.4"/></svg></button>
+    </div>
+    <script>
+      // the copy button: the BibTeX to the clipboard, and a check for a moment
+      {
+        const button = document.querySelector(".cite .copy");
+        const copy = button.innerHTML;
+        button.onclick = async () => {
+          await navigator.clipboard.writeText(document.querySelector(".cite pre").textContent);
+          button.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>';
+          setTimeout(() => (button.innerHTML = copy), 1500);
+        };
+      }
+    </script>
 
   </main>
 
