@@ -7,12 +7,11 @@
 // back to its clip, from where that clip stopped, and they all play again.
 // (?cards=live: every card live from the start.)
 //
-// The static grid stays in the HTML as the no-JS version (and on touch
-// screens, where dragging the grid would get in the way of scrolling, and in
-// Safari); this measures it, then redraws the same cards inside a draggable,
-// keeping the grid's columns. On the phone review page (review/phone.html,
-// data-phone-live), it's one card per row instead, each going live when
-// tapped.
+// The static grid stays in the HTML as the no-JS version (and in desktop
+// Safari); with a mouse, this measures it, then redraws the same cards
+// inside a draggable, keeping the grid's columns. On a touch screen, where
+// dragging the grid would get in the way of scrolling, the cards stay put
+// and each goes live when tapped, one per row on a phone.
 //
 // A card is picked up by its name, which is also its link to the full demo; a
 // press inside the live picture works the demo instead.
@@ -25,7 +24,6 @@ import { h, isWebKit, move, targetLines } from "./drag-shared.js";
 const PAD = 10; // room around the cards for the hover tilt
 const QUIET_MS = 8000; // how long the clips wait, once the pointer leaves the cards, to play again
 const MODE = new URLSearchParams(location.search).get("cards") === "live" ? "live" : "clips";
-const PHONE_LIVE = document.documentElement.hasAttribute("data-phone-live");
 
 const grid = document.querySelector(".demos");
 
@@ -304,7 +302,7 @@ async function desktop() {
   new ResizeObserver(render).observe(grid);
 }
 
-// # Phones, on the phone review page: one card per row, live when tapped
+// # Touch screens: each card live when tapped (one per row on a phone)
 
 function TappedDemo({ live, spec, size, initial }) {
   return h(live.LiveDemo, { id: spec.demoId, size, fallback: spec.fallback, initial, touch: true });
@@ -340,7 +338,7 @@ function holdDragTouches(host) {
 async function phone() {
   const live = await import("./js/cards-demos.js").catch((e) => { console.warn(e); return null; });
   if (!live) return;
-  grid.classList.add("one-column");
+  grid.classList.add("tap-cards");
   const cards = [...grid.querySelectorAll(":scope > a.card")];
   const { specs, ids } = cardSpecs(cards);
   cards.forEach((a, i) => {
@@ -380,4 +378,4 @@ async function phone() {
 
 const hover = matchMedia("(hover: hover) and (pointer: fine)").matches;
 if (hover && !isWebKit) desktop();
-else if (PHONE_LIVE) phone();
+else if (!hover) phone();

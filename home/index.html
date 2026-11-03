@@ -10,7 +10,6 @@
     if (location.hash.startsWith("#/")) location.replace("uist26/" + location.hash);
   </script>
 
-
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <title>Declarative Dragging</title>
@@ -92,7 +91,6 @@
       background-size: 800% 800%;
       animation: drift 12s linear infinite alternate;
     }
-
 
     h1 {
       font-weight: normal;
@@ -599,6 +597,20 @@
       cursor: -webkit-image-set(url("cursors/fist.png") 1x, url("cursors/fist@2x.png") 2x) 6 5, grabbing !important;
       cursor: image-set(url("cursors/fist.png") 1x, url("cursors/fist@2x.png") 2x) 6 5, grabbing !important;
     }
+    /* touch screens (cards.js): the cards stay put, each live when tapped, one per row on a phone */
+    @media (max-width: 560px) { .demos.tap-cards { grid-template-columns: 1fr; gap: 1.2rem; } }
+    .demos .tap-card .picture { position: relative; border: 1px solid var(--rule); border-radius: 8px; border-bottom-right-radius: 28px; overflow: hidden; background: white; }
+    .demos .tap-card:has(.name[href$="/tromino"]) .picture { border-bottom-right-radius: 8px; }
+    .demos .tap-card .picture video { border: 0; border-radius: 0; }
+    .demos .tap-card .name { display: block; font-family: "Silkscreen", "Cutive Mono", monospace; margin-top: 0.25rem; text-align: center; font-size: 0.76rem; text-decoration: none; }
+    /* a card's and the perm lab's "tap to try": in from the corner, clear of its wide rounding, in the live tags' font */
+    .tap-hint, .demos .card .tap-hint { position: absolute; right: 12px; bottom: 12px; font: 0.75rem "Cutive Mono", monospace; color: white; background: var(--accent); border-radius: 4px; padding: 0.1em 0.45em; }
+    /* a live figure not yet tapped lets vertical swipes scroll the page (tap-to-wake.ts) */
+    .tap-dormant svg { touch-action: pan-y !important; }
+    /* on a touch screen, pressing and dragging in a live figure, a card's included, selects no text and pops no callout */
+    @media (hover: none), (pointer: coarse) {
+      :is(#fig1-figure, .demos, figure.whiteboard, #perm-figure) { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    }
   </style>
   <!-- the small labels' pixel face (the award, the link pills, the demo cards' names) -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
@@ -673,7 +685,7 @@
         interaction.
       </p>
       <p>
-        Our goal with this project is to let people who think in abstractions keep working within the semantic
+        Our goal with this project is to let people keep working within the semantic
         worlds they inhabit, while helping them turn the rules of their worlds into rich tactile interactions in ours.
       </p>
     </div>
@@ -769,7 +781,7 @@
       <figure class="wide" id="perm-figure">
         <a href="https://joshuahhh.com/dragology/#/demos/permutation-lab"><video src="clips/permutation-lab.mp4" poster="clips/permutation-lab.webp" autoplay muted loop playsinline preload="metadata"></video></a>
         <figcaption>
-          One permutation, several notations, all in sync.
+          Parallel representations for permutations, updating in tandem.
           <a href="https://joshuahhh.com/dragology/#/demos/permutation-lab">Permutation lab</a>
         </figcaption>
       </figure>

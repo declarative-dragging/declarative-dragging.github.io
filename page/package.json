@@ -1,0 +1,31 @@
+{
+  "name": "declarative-dragging-page",
+  "private": true,
+  "type": "module",
+  "description": "The project page's live figures (built into ../home/js/), and the tools for its clips and walk figure",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "walk-editor": "node walk-server.mjs"
+  },
+  "dependencies": {
+    "d3-shape": "^3.2.0",
+    "dagre": "^0.8.5",
+    "dragology": "file:vendor/dragology-0.1.8-pre.e7625cd.tgz",
+    "immer": "^11.0.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/d3-shape": "^3.1.7",
+    "@types/dagre": "^0.7.53",
+    "@types/lodash": "^4.17.20",
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.3",
+    "esbuild": "^0.27.7",
+    "playwright-core": "1.49.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "typescript": "^5.9.3"
+  }
+}

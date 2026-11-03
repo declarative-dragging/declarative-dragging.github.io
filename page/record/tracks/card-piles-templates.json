@@ -1,0 +1,5 @@
+[
+  {"name": "arrow", "frame": "card-piles/f0058.png", "box": [186, 254, 206, 284], "hot": [191, 259]},
+  {"name": "fist", "frame": "card-piles/f0001.png", "box": [225, 342, 253, 368], "hot": [239, 355], "fill": true},
+  {"name": "hand", "frame": "card-piles/f0050.png", "box": [240, 342, 272, 374], "hot": [256, 358], "fill": true}
+]

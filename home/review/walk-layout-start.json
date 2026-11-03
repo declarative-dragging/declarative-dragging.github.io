@@ -1,0 +1,11 @@
+{
+  "frame": { "x": 60, "y": 0, "w": 1860, "h": 1428 },
+  "pieces": [
+    { "id": "map", "src": "walk-map", "crop": { "x": 0, "y": 0, "w": 1920, "h": 1428 }, "x": 960, "y": 714, "scale": 1, "rotate": 0, "look": "plain", "locked": true },
+    { "id": "sketch", "src": "elliot-2", "crop": { "x": 140, "y": 40, "w": 1640, "h": 1700 }, "x": 1125, "y": 652, "scale": 0.2471, "rotate": -2.5, "look": "paper" },
+    { "id": "drawing", "src": "elliot-3", "crop": { "x": 140, "y": 30, "w": 1700, "h": 1770 }, "x": 1430, "y": 1182, "scale": 0.2316, "rotate": 3, "look": "paper" },
+    { "id": "sketch-root", "src": "elliot-2", "crop": { "x": 770, "y": 50, "w": 350, "h": 265 }, "x": 270, "y": 200, "scale": 0.75, "rotate": -4, "look": "paper" },
+    { "id": "drawing-twist", "src": "elliot-3", "crop": { "x": 1576, "y": 1015, "w": 239, "h": 275 }, "x": 195, "y": 650, "scale": 0.85, "rotate": 5, "look": "paper" },
+    { "id": "sketch-loop", "src": "elliot-2", "crop": { "x": 1010, "y": 975, "w": 340, "h": 270 }, "x": 960, "y": 1250, "scale": 0.7, "rotate": -3, "look": "paper" }
+  ]
+}

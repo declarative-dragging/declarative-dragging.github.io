@@ -1,0 +1,4 @@
+[
+  {"name": "arrow", "frame": "bezier/f0001.png", "box": [156, 343, 181, 378], "hot": [160, 347]},
+  {"name": "fist", "frame": "bezier/f0007.png", "box": [143, 330, 174, 361], "hot": [158, 345], "fill": true}
+]

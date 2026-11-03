@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Walk figure editor</title>
+  <style>
+    :root { --ink: #1d1d1f; --muted: #6b6b70; --rule: #e7e4dc; --paper: #fdfcf8; --accent: #dc3400; --sel: #2563eb; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body { display: flex; font: 13px/1.4 system-ui, sans-serif; color: var(--ink); background: #ecebe6; overflow: hidden; }
+    #canvas { position: relative; flex: 1; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+    #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+    #overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+    #overlay [data-handle] { pointer-events: all; }
+    #preview { position: absolute; inset: 0; display: none; overflow: auto; background: var(--paper); padding: 2rem 1rem; }
+    #preview .column { max-width: 46rem; margin: 0 auto; }
+    #preview .walk-canvas { border: 1px solid var(--rule); border-radius: 8px; background: white; }
+    #preview figcaption { margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); line-height: 1.45; font-family: system-ui, sans-serif; }
+    body.previewing #preview { display: block; }
+    aside { width: 290px; flex: none; overflow: auto; background: var(--paper); border-left: 1px solid var(--rule); padding: 0.8rem 0.9rem 2rem; }
+    h1 { font-size: 1rem; font-weight: 600; margin: 0 0 0.2rem; }
+    h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; margin: 1.1rem 0 0.35rem; }
+    #status { font-size: 0.8rem; color: var(--muted); min-height: 1.2em; }
+    #status.bad { color: #b42318; }
+    button, select { font: inherit; border: 1px solid #ccc8bf; background: white; border-radius: 6px; padding: 0.22rem 0.55rem; cursor: pointer; color: var(--ink); }
+    button:hover { border-color: var(--ink); }
+    button:disabled { opacity: 0.4; cursor: default; border-color: #ccc8bf; }
+    .row { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin: 0.3rem 0; }
+    ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); border-radius: 6px; background: white; }
+    li { display: flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.45rem; border-top: 1px solid var(--rule); cursor: pointer; }
+    li:first-child { border-top: 0; }
+    li.sel { background: #e8efff; }
+    li .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    li .name small { color: var(--muted); }
+    li label { display: flex; align-items: center; gap: 0.15rem; font-size: 0.72rem; color: var(--muted); cursor: pointer; }
+    li.hidden .name { opacity: 0.45; }
+    .nums { font: 0.75rem/1.5 ui-monospace, monospace; color: var(--muted); white-space: pre; }
+    .help { color: var(--muted); font-size: 0.8rem; }
+    .help b { color: var(--ink); font-weight: 600; }
+    .help p { margin: 0.3rem 0; }
+    kbd { font: 0.72rem ui-monospace, monospace; border: 1px solid #ccc8bf; border-bottom-width: 2px; border-radius: 4px; padding: 0 0.25em; background: white; }
+    .slider { display: grid; grid-template-columns: 6.2rem 1fr 2.6rem; align-items: center; gap: 0.4rem; margin: 0.15rem 0; }
+    .slider input { width: 100%; margin: 0; }
+    .slider output { font: 0.75rem ui-monospace, monospace; color: var(--muted); text-align: right; }
+  </style>
+</head>
+<body>
+  <div id="canvas">
+    <div id="stage"></div>
+    <svg id="overlay"></svg>
+    <div id="preview">
+      <div class="column">
+        <div class="walk-canvas"></div>
+        <figcaption>As on the page, at its column's width.</figcaption>
+      </div>
+    </div>
+  </div>
+  <aside>
+    <h1>Walk figure</h1>
+    <div id="status"></div>
+    <div class="row">
+      <button id="undo" title="⌘Z">Undo</button>
+      <button id="redo" title="⇧⌘Z">Redo</button>
+      <button id="preview-btn" title="P">Preview</button>
+      <a href="../#walk-figure" target="_blank">the page ↗</a>
+    </div>
+
+    <h2>Pieces <span style="text-transform:none;letter-spacing:0">(top first)</span></h2>
+    <ul id="list"></ul>
+    <div class="row">
+      <select id="add-src"></select>
+      <button id="add">Add</button>
+    </div>
+
+    <div id="sel-panel">
+      <h2 id="sel-title">Selected</h2>
+      <div class="row" id="look-row">
+        look <select id="look">
+          <option value="paper">paper</option>
+          <option value="plain">plain</option>
+          <option value="ink">ink (multiply)</option>
+        </select>
+      </div>
+      <div class="row" id="piece-buttons">
+        <button id="dup" title="⌘D">Duplicate</button>
+        <button id="del" title="Delete">Delete</button>
+        <button id="up" title="]">Forward</button>
+        <button id="down" title="[">Back</button>
+        <button id="level">Straighten</button>
+        <button id="uncrop">Uncrop</button>
+      </div>
+      <div class="row" id="frame-buttons">
+        <button id="frame-map">Fit to the map</button>
+        <button id="frame-pieces">Fit to the pieces</button>
+      </div>
+      <div class="nums" id="nums"></div>
+    </div>
+
+    <h2>Paper <span style="text-transform:none;letter-spacing:0">(every sketch)</span></h2>
+    <div id="paper-sliders"></div>
+    <div class="row">
+      <button id="paper-reset" title="the shadow as it was first, square and opaque">Reset</button>
+    </div>
+
+    <h2>Gestures</h2>
+    <div class="help">
+      <p><b>Drag</b> a piece to move it; its <b>corners</b> to scale it; its <b>edges</b> to crop it (<kbd>⌥</kbd> on a corner crops two edges); the <b>knob</b> above it to turn it (<kbd>⇧</kbd> snaps to 15°).</p>
+      <p><kbd>⌥</kbd>-drag a piece to slide its image under its crop.</p>
+      <p>The orange frame is what the page shows: select it by its tab, then drag its tab to move it or its edges and corners to resize it.</p>
+      <p>Locked pieces (the map) select only from the list. <kbd>←↑→↓</kbd> nudge (<kbd>⇧</kbd> by 10), <kbd>[</kbd> <kbd>]</kbd> reorder, <kbd>Esc</kbd> deselects.</p>
+    </div>
+
+    <h2>Layout</h2>
+    <div class="row">
+      <button id="bake" title="the image the page shows, walk/walk-figure.webp">Bake the page's image</button>
+    </div>
+    <div class="row">
+      <button id="download">Download</button>
+      <button id="copy">Copy JSON</button>
+      <button id="revert" title="the layout Claude started with">Revert to start</button>
+    </div>
+  </aside>
+  <script type="module" src="walk-editor.js"></script>
+</body>
+</html>

@@ -30,3 +30,8 @@ dist-ssr
 
 # Claude, for now
 /.claude
+
+# The project page's built figures (page/build.mjs; CI builds them) and the
+# recorder's output (page/record/publish.mjs copies what the page uses)
+/home/js
+/page/record/out
